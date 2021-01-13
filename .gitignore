@@ -5,6 +5,9 @@
 *.pdf
 *.mov
 
+# VSC
+.vscode/*
+
 # Metrics and data
 gym_cooking/misc/metrics/*data*/
 gym_cooking/misc/metrics/*graph*/
