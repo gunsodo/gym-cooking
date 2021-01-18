@@ -242,6 +242,7 @@ class E2E_BRTDP:
             lower = new_lower
             main_counter +=1
             print('diff = {}, self.alpha = {}'.format(diff, self.alpha))
+            print('upper: {}, lower: {}'.format(upper, lower))
             self.runSampleTrial()
 
     def _configure_planner_level(self, env, subtask_agent_names, other_agent_planners):

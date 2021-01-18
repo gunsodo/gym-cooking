@@ -2,7 +2,7 @@
 # from gym_cooking.envs import OvercookedEnvironment
 from recipe_planner.recipe import *
 from utils.world import World
-from utils.agent import RealAgent, SimAgent, COLORS
+from utils.agent import Agent, SimAgent, RandomAgent, COLORS
 from utils.core import *
 from misc.game.gameplay import GamePlay
 from misc.metrics.metrics_bag import Bag
@@ -13,6 +13,7 @@ import argparse
 from collections import namedtuple
 
 import gym
+import os
 
 
 def parse_arguments():
@@ -47,6 +48,9 @@ def parse_arguments():
     parser.add_argument("--model3", type=str, default=None, help="Model type for agent 3 (bd, up, dc, fb, or greedy)")
     parser.add_argument("--model4", type=str, default=None, help="Model type for agent 4 (bd, up, dc, fb, or greedy)")
 
+    # RandomAgent
+    parser.add_argument("--random", action="store_true", default=False, help="Use our random agent")
+
     return parser.parse_args()
 
 
@@ -72,12 +76,18 @@ def initialize_agents(arglist):
             # phase 3: read in agent locations (up to num_agents)
             elif phase == 3:
                 if len(real_agents) < arglist.num_agents:
-                    loc = line.split(' ')
-                    real_agent = RealAgent(
-                            arglist=arglist,
-                            name='agent-'+str(len(real_agents)+1),
-                            id_color=COLORS[len(real_agents)],
-                            recipes=recipes)
+                    # loc = line.split(' ')
+                    if arglist.random:
+                        # TODO
+                        real_agent = RandomAgent(arglist=arglist,
+                                name='agent-'+str(len(real_agents)+1),
+                                id_color=COLORS[len(real_agents)])
+                    else: 
+                        real_agent = Agent(
+                                arglist=arglist,
+                                name='agent-'+str(len(real_agents)+1),
+                                id_color=COLORS[len(real_agents)],
+                                recipes=recipes)
                     real_agents.append(real_agent)
 
     return real_agents
@@ -87,7 +97,6 @@ def main_loop(arglist):
     print("Initializing environment and agents.")
     env = gym.envs.make("gym_cooking:overcookedEnv-v0", arglist=arglist)
     obs = env.reset()
-    # game = GameVisualize(env)
     real_agents = initialize_agents(arglist=arglist)
 
     # Info bag for saving pkl files
@@ -102,14 +111,14 @@ def main_loop(arglist):
             action_dict[agent.name] = action
 
         obs, reward, done, info = env.step(action_dict=action_dict)
-        print(type(obs))
 
         # Agents
-        for agent in real_agents:
-            agent.refresh_subtasks(world=env.world)
+        if not arglist.random:
+            for agent in real_agents:
+                agent.refresh_subtasks(world=env.world)
 
-        # Saving info
-        bag.add_status(cur_time=info['t'], real_agents=real_agents)
+            # Saving info
+            bag.add_status(cur_time=info['t'], real_agents=real_agents)
 
 
     # Saving final information before saving pkl file
@@ -126,8 +135,9 @@ if __name__ == '__main__':
         game.on_execute()
     else:
         model_types = [arglist.model1, arglist.model2, arglist.model3, arglist.model4]
-        assert len(list(filter(lambda x: x is not None,
-            model_types))) == arglist.num_agents, "num_agents should match the number of models specified"
+        if not arglist.random:
+            assert len(list(filter(lambda x: x is not None,
+                model_types))) == arglist.num_agents, "num_agents should match the number of models specified"
         fix_seed(seed=arglist.seed)
         main_loop(arglist=arglist)
 

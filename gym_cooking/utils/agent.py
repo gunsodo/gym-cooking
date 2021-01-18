@@ -16,6 +16,7 @@ from utils.utils import agent_settings
 
 import numpy as np
 import copy
+import random
 from termcolor import colored as color
 from collections import namedtuple
 
@@ -25,7 +26,7 @@ AgentRepr = namedtuple("AgentRepr", "name location holding")
 COLORS = ['blue', 'magenta', 'yellow', 'green']
 
 
-class RealAgent:
+class Agent:
     """Real Agent object that performs task inference and plans."""
 
     def __init__(self, arglist, name, id_color, recipes):
@@ -309,3 +310,24 @@ class SimAgent:
         self.location = new_location
         if self.holding is not None:
             self.holding.location = new_location
+
+class RandomAgent:
+    """Random Agent object that performs task inference and plans."""
+
+    def __init__(self, arglist, name, id_color):
+        self.arglist = arglist
+        self.name = name
+        self.color = id_color
+
+    def __str__(self):
+        return color(self.name[-1], self.color)
+
+    def __copy__(self):
+        a = RandomAgent(arglist=self.arglist,
+                name=self.name,
+                id_color=self.color)
+        return a
+
+    def select_action(self, obs):
+        """Return best next action for this agent given observations."""
+        return random.choice([(0, 0), (0, 1), (0, -1), (1, 0), (-1, 0)])

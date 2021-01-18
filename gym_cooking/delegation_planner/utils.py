@@ -41,31 +41,31 @@ class SubtaskAllocDistribution():
             return random.choice(max_subtask_allocs)
         return None
 
-    def get_max_bucketed(self):
-        subtasks = []
-        probs = []
-        for subtask_alloc, p in self.probs.items():
-            for t in subtask_alloc:
-                if agent_name in t.subtask_agent_names:
-                    # If already accounted for, then add probability.
-                    if t in subtasks:
-                        probs[subtasks.index(t)] += p
-                    # Otherwise, make a new element in the distribution.
-                    else:
-                        subtasks.append(t)
-                        probs.append(p)
-        best_subtask = subtasks[np.argmax(probs)]
-        return self.probs.get_best_containing(best_subtask)
+    # def get_max_bucketed(self):
+    #     subtasks = []
+    #     probs = []
+    #     for subtask_alloc, p in self.probs.items():
+    #         for t in subtask_alloc:
+    #             if agent_name in t.subtask_agent_names:
+    #                 # If already accounted for, then add probability.
+    #                 if t in subtasks:
+    #                     probs[subtasks.index(t)] += p
+    #                 # Otherwise, make a new element in the distribution.
+    #                 else:
+    #                     subtasks.append(t)
+    #                     probs.append(p)
+    #     best_subtask = subtasks[np.argmax(probs)]
+    #     return self.probs.get_best_containing(best_subtask)
 
-    def get_best_containing(self, subtask):
-        """Return max likelihood subtask_alloc that contains the given subtask."""
-        valid_subtask_allocs = []
-        valid_p = []
-        for subtask_alloc, p in self.probs.items():
-            if subtask in subtask_alloc:
-                valid_subtask_allocs.append(subtask)
-                valid_p.append(p)
-        return valid_subtask_allocs[np.argmax(valid_p)]
+    # def get_best_containing(self, subtask):
+    #     """Return max likelihood subtask_alloc that contains the given subtask."""
+    #     valid_subtask_allocs = []
+    #     valid_p = []
+    #     for subtask_alloc, p in self.probs.items():
+    #         if subtask in subtask_alloc:
+    #             valid_subtask_allocs.append(subtask)
+    #             valid_p.append(p)
+    #     return valid_subtask_allocs[np.argmax(valid_p)]
 
     def set(self, subtask_alloc, value):
         self.probs[tuple(subtask_alloc)] = value

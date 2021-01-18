@@ -77,16 +77,19 @@ class OvercookedEnvironment(gym.Env):
     def set_filename(self):
         self.filename = "{}_agents{}_seed{}".format(self.arglist.level,\
             self.arglist.num_agents, self.arglist.seed)
-        model = ""
-        if self.arglist.model1 is not None:
-            model += "_model1-{}".format(self.arglist.model1)
-        if self.arglist.model2 is not None:
-            model += "_model2-{}".format(self.arglist.model2)
-        if self.arglist.model3 is not None:
-            model += "_model3-{}".format(self.arglist.model3)
-        if self.arglist.model4 is not None:
-            model += "_model4-{}".format(self.arglist.model4)
-        self.filename += model
+        if self.arglist.random: 
+            self.filename += "_random"
+        else:
+            model = ""
+            if self.arglist.model1 is not None:
+                model += "_model1-{}".format(self.arglist.model1)
+            if self.arglist.model2 is not None:
+                model += "_model2-{}".format(self.arglist.model2)
+            if self.arglist.model3 is not None:
+                model += "_model3-{}".format(self.arglist.model3)
+            if self.arglist.model4 is not None:
+                model += "_model4-{}".format(self.arglist.model4)
+            self.filename += model
 
     def load_level(self, level, num_agents):
         x = 0
@@ -321,7 +324,7 @@ class OvercookedEnvironment(gym.Env):
     def get_lower_bound_for_subtask_given_objs(
             self, subtask, subtask_agent_names, start_obj, goal_obj, subtask_action_obj):
         """Return the lower bound distance (shortest path) under this subtask between objects."""
-        assert len(subtask_agent_names) <= 2, 'passed in {} agents but can only do 1 or 2'.format(len(agents))
+        # assert len(subtask_agent_names) <= 2, 'passed in {} agents but can only do 1 or 2'.format(len(agents))
 
         # Calculate extra holding penalty if the object is irrelevant.
         holding_penalty = 0.0
