@@ -3,9 +3,6 @@ from recipe_planner.stripsworld import STRIPSWorld
 import recipe_planner.utils as recipe
 from recipe_planner.recipe import *
 
-# Delegation planning
-from delegation_planner.bayesian_delegator import BayesianDelegator
-
 # Navigation planning
 import navigation_planner.utils as nav_utils
 
@@ -274,88 +271,6 @@ class OvercookedEnvironment(gym.Env):
         all_subtasks = [subtask for path in subtasks for subtask in path]
         print('Subtasks:', all_subtasks, '\n')
         return all_subtasks
-
-    def get_AB_locs_given_objs(self, subtask, subtask_agent_names, start_obj, goal_obj, subtask_action_obj):
-        """Returns list of locations relevant for subtask's Merge operator.
-
-        See Merge operator formalism in our paper, under Fig. 11:
-        https://arxiv.org/pdf/2003.11778.pdf"""
-
-        # For Merge operator on Chop subtasks, we look at objects that can be
-        # chopped and the cutting board objects.
-        if isinstance(subtask, recipe.Chop):
-            # A: Object that can be chopped.
-            A_locs = self.world.get_object_locs(obj=start_obj, is_held=False) + list(map(lambda a: a.location,\
-                list(filter(lambda a: a.name in subtask_agent_names and a.holding == start_obj, self.sim_agents))))
-
-            # B: Cutboard objects.
-            B_locs = self.world.get_all_object_locs(obj=subtask_action_obj)
-
-        # For Merge operator on Deliver subtasks, we look at objects that can be
-        # delivered and the Delivery object.
-        elif isinstance(subtask, recipe.Deliver):
-            # B: Delivery objects.
-            B_locs = self.world.get_all_object_locs(obj=subtask_action_obj)
-
-            # A: Object that can be delivered.
-            A_locs = self.world.get_object_locs(
-                    obj=start_obj, is_held=False) + list(
-                            map(lambda a: a.location, list(
-                                filter(lambda a: a.name in subtask_agent_names and a.holding == start_obj, self.sim_agents))))
-            A_locs = list(filter(lambda a: a not in B_locs, A_locs))
-
-        # For Merge operator on Merge subtasks, we look at objects that can be
-        # combined together. These objects are all ingredient objects (e.g. Tomato, Lettuce).
-        elif isinstance(subtask, recipe.Merge):
-            A_locs = self.world.get_object_locs(
-                    obj=start_obj[0], is_held=False) + list(
-                            map(lambda a: a.location, list(
-                                filter(lambda a: a.name in subtask_agent_names and a.holding == start_obj[0], self.sim_agents))))
-            B_locs = self.world.get_object_locs(
-                    obj=start_obj[1], is_held=False) + list(
-                            map(lambda a: a.location, list(
-                                filter(lambda a: a.name in subtask_agent_names and a.holding == start_obj[1], self.sim_agents))))
-
-        else:
-            return [], []
-
-        return A_locs, B_locs
-
-    def get_lower_bound_for_subtask_given_objs(
-            self, subtask, subtask_agent_names, start_obj, goal_obj, subtask_action_obj):
-        """Return the lower bound distance (shortest path) under this subtask between objects."""
-        # assert len(subtask_agent_names) <= 2, 'passed in {} agents but can only do 1 or 2'.format(len(agents))
-
-        # Calculate extra holding penalty if the object is irrelevant.
-        holding_penalty = 0.0
-        for agent in self.sim_agents:
-            if agent.name in subtask_agent_names:
-                # Check for whether the agent is holding something.
-                if agent.holding is not None:
-                    if isinstance(subtask, recipe.Merge):
-                        continue
-                    else:
-                        if agent.holding != start_obj and agent.holding != goal_obj:
-                            # Add one "distance"-unit cost
-                            holding_penalty += 1.0
-        # Account for two-agents where we DON'T want to overpenalize.
-        holding_penalty = min(holding_penalty, 1)
-
-        # Get current agent locations.
-        agent_locs = [agent.location for agent in list(filter(lambda a: a.name in subtask_agent_names, self.sim_agents))]
-        A_locs, B_locs = self.get_AB_locs_given_objs(
-                subtask=subtask,
-                subtask_agent_names=subtask_agent_names,
-                start_obj=start_obj,
-                goal_obj=goal_obj,
-                subtask_action_obj=subtask_action_obj)
-
-        # Add together distance and holding_penalty.
-        return self.world.get_lower_bound_between(
-                subtask=subtask,
-                agent_locs=tuple(agent_locs),
-                A_locs=tuple(A_locs),
-                B_locs=tuple(B_locs)) + holding_penalty
 
     def is_collision(self, agent1_loc, agent2_loc, agent1_action, agent2_action):
         """Returns whether agents are colliding.
